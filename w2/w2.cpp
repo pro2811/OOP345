@@ -1,9 +1,3 @@
-
-// Workshop 2 - Copy and Move Semantics
-// w2.cpp
-// Chris Szalwinski
-// 2018.05.16
-
 #include <fstream>
 #include <iostream>
 #include <iomanip>
