@@ -1,0 +1,198 @@
+Script started on Wed 25 Jul 2018 05:21:41 PM EDT
+]0;srpanchal@mtrx-node06pd:~/SEM4/lab7[?1034h[srpanchal@mtrx-node06pd lab7]$ whoami
+srpanchal
+]0;srpanchal@mtrx-node06pd:~/SEM4/lab7[srpanchal@mtrx-node06pd lab7]$ a[Kcat *.h *.cpp
+#ifndef _I_PRODUCT_H_
+#define _I_PRODUCT_H_
+
+// Workshop 7 - STL Containers
+// iProduct.h
+
+#include <iostream>
+#include <fstream>
+
+namespace w7 {
+    
+    class iProduct {
+    public:
+        virtual double getCharge() const = 0;
+        virtual void display(std::ostream&) const = 0;
+    };
+    std::ostream& operator<<(std::ostream &, const iProduct &);
+    iProduct* readProduct(std::ifstream&);
+}
+#endif
+#ifndef PRODUCT_H
+#define PRODUCT_H
+#include "iProduct.h"
+namespace w7{
+  
+    class Product : public iProduct{
+	   
+        long int number;
+        double cost;
+	    public:
+        Product(long int TempNum, double TempCost) : number(TempNum), cost(TempCost) { }
+        double getCharge() const{return cost;}
+        void display(std::ostream &) const;
+    };
+    
+}
+#endif
+#ifndef SALE_H
+#define SALE_H
+#include <vector>
+#include <iomanip>
+#include "Product.h"
+#include "TaxProduct.h"
+
+namespace w7{
+    class Sale{
+        std::vector <iProduct*> prod;
+    public:
+        Sale(const char* fname);
+        void display(std::ostream &os) const;
+	~Sale();
+    };
+}
+#endif
+#ifndef TAXPRODUCT_H
+#define TAXPRODUCT_H
+#include "Product.h"
+#define HST 1.13
+#define PST 1.08
+
+namespace w7{
+    class TaxProduct : public Product{
+    double Tax;
+public:
+        TaxProduct(long int TempNum, double TempCost,double TempTax) : Product(TempNum, TempCost), Tax(TempTax){}
+    double getCharge() const{ return Product::getCharge()*(Tax); }
+    
+    void display(std::ostream &os) const{
+        Product::display(os);
+        os<< (Tax == HST ? " HST" : " PST");
+    }
+};
+}
+#endif
+#include <iomanip>
+#include "Product.h"
+#include "TaxProduct.h"
+
+using namespace std;
+namespace w7{
+    iProduct* readProduct(std::ifstream & sp){
+        iProduct *pro = nullptr;
+        long int pnum;
+        double pcost;
+        char ndl;
+    sp >> pnum >> pcost;
+    ndl = sp.get();
+    
+    if(ndl == ' '){
+        sp>>ndl;
+        
+        if(ndl == 'H'){
+            TaxProduct *Tpro = new TaxProduct(pnum, pcost, HST);
+            pro = Tpro;
+        }else if(ndl == 'P'){
+            TaxProduct *Tpro = new TaxProduct(pnum, pcost, PST);
+            pro = Tpro;
+        }
+    }else{
+            Product *NTpro = new Product(pnum,pcost);
+            pro = NTpro;
+        }
+        return pro;
+    }
+        
+        std::ostream &operator<<(std::ostream &os,const iProduct &p){
+       		 p.display(os);
+      		 return os;
+        }
+    
+        void Product::display(std::ostream &os) const{
+            
+        os<< setw(10)<< number<< right<< setw(10)<< std::fixed<< std::setprecision(2)<<Product::getCharge();
+   }
+}
+#include <vector>
+#include <iostream>
+#include <fstream>
+#include <iostream>
+#include "Sale.h"
+
+using namespace std;
+
+namespace w7{
+    
+    Sale::Sale(const char *fname){
+        ifstream sp(fname, ios::out);
+        
+	if(!sp){ cout<<"Error!!"<<fname<<endl;}
+	else{
+		while(sp){
+			prod.push_back(readProduct(sp));
+		}
+	}
+        }
+
+ 	Sale::~Sale(){
+		
+		for(auto s = 0u; s< (prod.size()-1);s++)
+			delete [] prod[s];
+	}
+        
+        void Sale::display(ostream &os) const{
+            double s = 0;
+            os << "Product No      Cost Taxable" << endl;
+    	   
+            for (auto i = 0u; i <(prod.size()-1); i++) {
+                 os <<*prod[i]<<endl;
+                 s += prod[i]->getCharge();
+           }
+            
+            os << "     Total" << setw(10) <<s << endl;
+        }
+       
+}
+    
+
+
+// Workshop 7 - STL Containers
+// w7.cpp
+
+#include <iostream>
+#include <string>
+#include "Sale.h"
+
+int main(int argc, char** argv) {
+    if (argc != 2) {
+        std::cerr << argv[0] << ": incorrect number of arguments\n";
+        std::cerr << "Usage: " << argv[0] << " file_name\n";
+        return 1;
+    }
+    
+    w7::Sale sale(argv[1]); 
+    sale.display(std::cout);
+    
+    std::cout << "\nPress any key to continue ... ";
+    std::cin.get();
+}
+]0;srpanchal@mtrx-node06pd:~/SEM4/lab7[srpanchal@mtrx-node06pd lab7]$ g++ Product.cpp w7.cpp Sale.cpp -Wall -std=c++0x  -o w7
+]0;srpanchal@mtrx-node06pd:~/SEM4/lab7[srpanchal@mtrx-node06pd lab7]$ w7 test.txt
+Product No      Cost Taxable
+     10012     34.56
+     10023     45.67 HST
+     10234     12.32 PST
+     10056     67.54
+     10029     54.12 HST
+     10034     96.30
+     Total    324.47
+
+Press any key to continue ... 
+]0;srpanchal@mtrx-node06pd:~/SEM4/lab7[srpanchal@mtrx-node06pd lab7]$ exit
+exit
+
+Script done on Wed 25 Jul 2018 05:22:59 PM EDT
